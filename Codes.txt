@@ -1,0 +1,124 @@
+#Submitted by MIM ROY (Data Science intern)
+#TASK 1: Predicting the score of students based on study hours
+
+#importing packages
+import pandas as pd
+import numpy as np
+import statsmodels.formula.api as sm
+import os
+
+#importing dataset
+os.chdir('C:/Users/mimro/OneDrive/Desktop/Python')
+data = pd.read_csv('Student_Scores.csv')
+data.head()
+
+#checking outliers
+data.boxplot(column = ["Hours"])
+data.boxplot (column = ["Scores"])
+
+#checking if there are any missing values
+data.isnull().sum()
+
+#performing linear regression were Scores is the dependent variable and Hours is the independent variable
+regression = sm.ols(
+    formula = "Scores ~ Hours", data =data).fit()
+regression.summary()
+
+#Annova is less than 0.05
+
+#predicting the scores
+data["pred"] = regression.predict()
+
+data.head()
+
+var = pd.DataFrame(round
+                   (regression.pvalues,3))
+# shows p value
+regression.rsquared
+var["coeff"] = regression.params
+#coefficients
+
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+variables = regression.model.exog 
+
+vif = [variance_inflation_factor
+       (variables, i) for i in 
+       range(variables.shape[1])]
+vif 
+var["vif"] = vif
+var
+
+data["mp"] = abs((data["Scores"] 
+                  - data["pred"])
+                 /data["Scores"])
+(data.mp.mean())*100#mape
+
+# assumption normality test
+#Shapiro Wilk test
+#Null Hypothesis: The residuals are normally distributed.
+#Alternative Hypothesis: The residuals are not normally distributed.
+from scipy import stats
+stats.shapiro(regression.resid)
+#2nd value is p value;
+
+#Here the p-alue is less than 0.05, 
+#so the residual is not normally distributed
+
+from scipy.stats import normaltest
+normaltest(regression.resid)
+
+#Checking for autocorrelation
+#Null Hypothesis: Autocorrelation is absent.
+#Alternative Hypothesis: Autocorrelation is present.
+
+from statsmodels.stats import diagnostic as diag
+diag.acorr_ljungbox(regression.resid , 
+                    lags = 1)
+#2nd value is p value; 
+
+#p-value is more than 0.05
+#there is no serial correlation
+
+#Checking heteroscedasticity
+#Null Hypothesis: Error terms are homoscedastic
+#Alternative Hypothesis: Error terms are heteroscedastic.
+
+import statsmodels.stats.api as sms
+from statsmodels.compat import lzip
+
+#Goldfeld-Quandt test
+name = ['F statistic', 'p-value']
+
+test = sms.het_goldfeldquandt
+(regression.resid, regression.model.exog)
+
+lzip(name, test)#2nd value is p value; 
+
+#Breush-Pagan test:
+name = ['Lagrange multiplier statistic', 
+        'p-value',
+        'f-value', 'f p-value']
+test = sms.het_breuschpagan
+(regression.resid, regression.model.exog)
+
+lzip(name, test)
+
+#p-value is more than 0.05
+#the residual is homoscedastic
+
+# end of linear regression
+
+#exporting the dataset
+import os
+
+os.chdir('C:/Users/mimro/OneDrive/Desktop/Python')
+
+data.to_csv('Predicted Scores.csv',
+            index=False)
+#export data to local drive
+
+Data_point = pd.DataFrame()
+Data_point["Hours"] = [9.2]
+type(Data_point)
+Data_point
+regression.predict(Data_point["Hours"])
